@@ -1,0 +1,232 @@
+﻿
+@model TuneStats.DTOs.TableDto
+@{
+    Layout = null;
+    var ilkKayit = Model.ToplamKayit == 0 ? 0 : ((Model.Sayfa - 1) * Model.SayfaBoyutu) + 1;
+    var sonKayit = ((Model.Sayfa - 1) * Model.SayfaBoyutu) + Model.GosterilenKayit;
+    var sayfaBaslangic = Math.Max(1, Model.Sayfa - 2);
+    var sayfaBitis = Math.Min(Model.ToplamSayfa, Model.Sayfa + 2);
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TuneStats - Veri Tablosu</title>
+    <link rel="stylesheet" href="~/style.css" asp-append-version="true">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <div class="brand-icon">🎵</div>
+                    <div>
+                        <div class="brand-text">TuneStats</div>
+                        <div class="brand-subtitle">Streaming Dashboard</div>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-label">Menü</div>
+                    <a asp-controller="Home" asp-action="Index" class="nav-item">
+                        <span class="icon">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a asp-controller="Home" asp-action="Table" class="nav-item active">
+                        <span class="icon">📋</span>
+                        <span>Veri Tablosu</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">☰</button>
+                    <div>
+                        <h1 class="page-title">Veri Tablosu</h1>
+                    </div>
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" placeholder="Ara...">
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="date-filter">
+                        <span>📅</span>
+                        <span>@Model.Donem</span>
+                    </div>
+                    <button class="header-icon-btn">
+                        🔔
+                        <span class="badge-dot"></span>
+                    </button>
+
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="mini-cards-row">
+                    <div class="mini-card animate-in">
+                        <div class="mini-card-icon" style="background: rgba(139,92,246,0.12); color: #8b5cf6;">📋</div>
+                        <div class="mini-card-content">
+                            <div class="mini-card-value">@Model.GosterilenKayit</div>
+                            <div class="mini-card-label">Görüntülenen Kayıt</div>
+                        </div>
+                    </div>
+                    <div class="mini-card animate-in animate-delay-1">
+                        <div class="mini-card-icon" style="background: rgba(6,182,212,0.12); color: #06b6d4;">🎵</div>
+                        <div class="mini-card-content">
+                            <div class="mini-card-value">@Model.FarkliSanatci</div>
+                            <div class="mini-card-label">Farklı Sanatçı</div>
+                        </div>
+                    </div>
+                    <div class="mini-card animate-in animate-delay-2">
+                        <div class="mini-card-icon" style="background: rgba(245,158,11,0.12); color: #f59e0b;">📍</div>
+                        <div class="mini-card-content">
+                            <div class="mini-card-value">@Model.FarkliSehir</div>
+                            <div class="mini-card-label">Farklı Şehir</div>
+                        </div>
+                    </div>
+                    <div class="mini-card animate-in animate-delay-3">
+                        <div class="mini-card-icon" style="background: rgba(16,185,129,0.12); color: #10b981;">🎧</div>
+                        <div class="mini-card-content">
+                            <div class="mini-card-value">@Model.FarkliTur</div>
+                            <div class="mini-card-label">Farklı Tür</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-wrapper animate-in animate-delay-1">
+                    <form asp-controller="Home" asp-action="Table" method="get" class="table-toolbar">
+                        <div class="table-search">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="searchId" name="id" value="@Model.ArananId" placeholder="ID ile ara...">
+                        </div>
+                    </form>
+
+                    <div class="table-scroll">
+                        <table class="data-table" id="dataTable">
+                            <thead>
+                                <tr>
+                                    <th>Dinleme ID</th>
+                                    <th>Ad Soyad</th>
+                                    <th>Yaş</th>
+                                    <th>İl</th>
+                                    <th>İlçe</th>
+                                    <th>Sanatçı</th>
+                                    <th>Şarkı</th>
+                                    <th>Tür</th>
+                                    <th>Tarih</th>
+                                    <th>İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Dinlemeler)
+                                {
+                                    var tur = item.Tur.ToLower().Replace("ı", "i");
+                                    var badgeClass = tur.Contains("pop") ? "badge-pop" : tur.Contains("rock") ? "badge-rock" : tur.Contains("rap") || tur.Contains("hiphop") ? "badge-rap" : tur.Contains("arabesk") ? "badge-arabesk" : tur.Contains("jazz") ? "badge-jazz" : "badge-thm";
+                                    <tr>
+                                        <td class="cell-primary">#@item.DinlemeId</td>
+                                        <td class="cell-secondary">@item.AdSoyad</td>
+                                        <td>@item.Yas</td>
+                                        <td>@item.Il</td>
+                                        <td>@item.Ilce</td>
+                                        <td class="cell-primary">@item.Sanatci</td>
+                                        <td>@item.Sarki</td>
+                                        <td><span class="badge @badgeClass">@item.Tur</span></td>
+                                        <td>@item.Tarih.ToString("dd.MM.yyyy")</td>
+                                        <td>
+                                            <div class="table-actions">
+                                                <button type="button"
+                                                        class="row-action edit open-update-modal"
+                                                        data-id="@item.DinlemeId"
+                                                        data-adsoyad="@item.AdSoyad"
+                                                        data-yas="@item.Yas"
+                                                        data-il="@item.Il"
+                                                        data-ilce="@item.Ilce"
+                                                        data-sanatci="@item.Sanatci"
+                                                        data-sarki="@item.Sarki"
+                                                        data-tur="@item.Tur">
+                                                    Güncelle
+                                                </button>
+                                                <a class="row-action delete" asp-controller="Home" asp-action="Delete" asp-route-id="@item.DinlemeId" asp-route-sayfa="@Model.Sayfa">Sil</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="modal-overlay" id="updateModal">
+                        <div class="modal-card">
+                            <div class="modal-header">
+                                <h3>Kayıt Güncelle</h3>
+                                <button type="button" class="modal-close" id="closeUpdateModal">×</button>
+                            </div>
+                            <form asp-controller="Home" asp-action="Update" method="post" class="modal-form">
+                                <input type="hidden" name="sayfa" value="@Model.Sayfa">
+                                <input type="hidden" name="DinlemeId" id="updateDinlemeId">
+                                <div class="modal-grid">
+                                    <label>Ad Soyad<input type="text" name="AdSoyad" id="updateAdSoyad"></label>
+                                    <label>Yaş<input type="number" name="Yas" id="updateYas"></label>
+                                    <label>İl<input type="text" name="Il" id="updateIl"></label>
+                                    <label>İlçe<input type="text" name="Ilce" id="updateIlce"></label>
+                                    <label>Sanatçı<input type="text" name="Sanatci" id="updateSanatci"></label>
+                                    <label>Şarkı<input type="text" name="Sarki" id="updateSarki"></label>
+                                    <label>Tür<input type="text" name="Tur" id="updateTur"></label>
+                                </div>
+                                <div class="modal-actions">
+                                    <button type="button" class="btn btn-secondary" id="cancelUpdateModal">Vazgeç</button>
+                                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="pagination">
+                        <div class="pagination-info">@ilkKayit-@sonKayit / @Model.ToplamKayit kayıt gösteriliyor</div>
+                        <div class="pagination-controls">
+                            @if (Model.Sayfa <= 1)
+                            {
+                                <button class="pagination-btn" disabled>Önceki</button>
+                            }
+                            else
+                            {
+                                <a class="pagination-btn" asp-controller="Home" asp-action="Table" asp-route-sayfa="@(Model.Sayfa - 1)" asp-route-id="@Model.ArananId">Önceki</a>
+                            }
+                            @for (int i = sayfaBaslangic; i <= sayfaBitis; i++)
+                            {
+                                <a class="pagination-btn @(i == Model.Sayfa ? "active" : "")" asp-controller="Home" asp-action="Table" asp-route-sayfa="@i" asp-route-id="@Model.ArananId">@i</a>
+                            }
+                            @if (Model.Sayfa >= Model.ToplamSayfa)
+                            {
+                                <button class="pagination-btn" disabled>Sonraki</button>
+                            }
+                            else
+                            {
+                                <a class="pagination-btn" asp-controller="Home" asp-action="Table" asp-route-sayfa="@(Model.Sayfa + 1)" asp-route-id="@Model.ArananId">Sonraki</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+

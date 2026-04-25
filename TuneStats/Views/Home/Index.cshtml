@@ -1,0 +1,495 @@
+@model TuneStats.DTOs.DashboardDto
+@{
+    Layout = null;
+    var renkler = new[] { "#8b5cf6", "#ec4899", "#06b6d4", "#f59e0b", "#10b981", "#fb7185", "#a78bfa" };
+    var trendMax = Model.DinlemeTrend.Any() ? Model.DinlemeTrend.Max(x => x.Dinlenme) : 1;
+    var yasMax = Model.YasDagilim.Any() ? Model.YasDagilim.Max(x => x.Dinlenme) : 1;
+    var ilMax = Model.İlDagilim.Any() ? Model.İlDagilim.Max(x => x.Dinlenme) : 1;
+    var ilceMax = Model.İlceDagilim.Any() ? Model.İlceDagilim.Max(x => x.Dinlenme) : 1;
+    var gunMax = Model.GunDagilim.Any() ? Model.GunDagilim.Max(x => x.Dinlenme) : 1;
+    var trendPoints = string.Join(" ", Model.DinlemeTrend.Select((x, i) =>
+    {
+        var xPos = Model.DinlemeTrend.Count == 1 ? 335 : 50 + (570 * i / (Model.DinlemeTrend.Count - 1));
+        var yPos = 250 - (225 * x.Dinlenme / trendMax);
+        return xPos + "," + yPos;
+    }));
+    var trendArea = Model.DinlemeTrend.Any() ? "M" + trendPoints.Replace(" ", " L") + " L620 250 L50 250 Z" : "";
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TuneStats - Dashboard</title>
+    <link rel="stylesheet" href="~/style.css" asp-append-version="true">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <div class="brand-icon">🎵</div>
+                    <div>
+                        <div class="brand-text">TuneStats</div>
+                        <div class="brand-subtitle">Streaming Dashboard</div>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-label">Menü</div>
+                    <a asp-controller="Home" asp-action="Index" class="nav-item active">
+                        <span class="icon">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a asp-controller="Home" asp-action="Table" class="nav-item">
+                        <span class="icon">📋</span>
+                        <span>Veri Tablosu</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">☰</button>
+                    <div>
+                        <h1 class="page-title">Dashboard</h1>
+                    </div>
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" placeholder="Ara...">
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="date-filter">
+                        <span>📅</span>
+                        <span>@Model.Donem</span>
+                    </div>
+                    <button class="header-icon-btn">
+                        🔔
+                        <span class="badge-dot"></span>
+                    </button>
+
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="stats-grid">
+                    <div class="stat-card animate-in">
+                        <div class="stat-header">
+                            <div class="stat-icon violet">🎧</div>
+                        </div>
+                        <div class="stat-value" data-stat="toplamDinleme">@Model.ToplamDinleme.ToString("N0")</div>
+                        <div class="stat-label">Toplam Dinleme</div>
+                    </div>
+                    <div class="stat-card animate-in animate-delay-1">
+                        <div class="stat-header">
+                            <div class="stat-icon pink">🎤</div>
+                        </div>
+                        <div class="stat-value" data-stat="toplamSanatci">@Model.ToplamSanatci.ToString("N0")</div>
+                        <div class="stat-label">Toplam Sanatçı</div>
+                    </div>
+                    <div class="stat-card animate-in animate-delay-2">
+                        <div class="stat-header">
+                            <div class="stat-icon cyan">🎶</div>
+                        </div>
+                        <div class="stat-value" data-stat="toplamSarki">@Model.ToplamSarki.ToString("N0")</div>
+                        <div class="stat-label">Toplam Şarkı</div>
+                    </div>
+                    <div class="stat-card animate-in animate-delay-3">
+                        <div class="stat-header">
+                            <div class="stat-icon amber">🎸</div>
+                        </div>
+                        <div class="stat-value" data-stat="enPopulerTur">@Model.EnPopulerTur</div>
+                        <div class="stat-label">En Popüler Tür</div>
+                    </div>
+                    <div class="stat-card animate-in animate-delay-4">
+                        <div class="stat-header">
+                            <div class="stat-icon rose">📍</div>
+                        </div>
+                        <div class="stat-value" data-stat="enCokDinlenenIl">@Model.EnCokDinlenenİl</div>
+                        <div class="stat-label">En Çok Dinlenen İl</div>
+                    </div>
+                    <div class="stat-card animate-in animate-delay-5">
+                        <div class="stat-header">
+                            <div class="stat-icon emerald">⭐</div>
+                        </div>
+                        <div class="stat-value" data-stat="enCokDinlenenSanatci">@Model.EnCokDinlenenSanatci</div>
+                        <div class="stat-label">En Çok Dinlenen Sanatçı</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="chart-card animate-in">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Dinleme Trendi (Son 9 Gün)</h3>
+                        </div>
+                        <div class="chart-container">
+                            <svg class="static-chart chart-fill" viewBox="0 0 640 280" preserveAspectRatio="none" role="img" aria-label="Dinleme Trendi Son 9 Gün">
+                                <defs>
+                                    <linearGradient id="trendFill" x1="0" x2="0" y1="0" y2="1">
+                                        <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.3" />
+                                        <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0" />
+                                    </linearGradient>
+                                </defs>
+                                <line x1="50" y1="25" x2="620" y2="25" stroke="rgba(255,255,255,0.04)" />
+                                <line x1="50" y1="75" x2="620" y2="75" stroke="rgba(255,255,255,0.04)" />
+                                <line x1="50" y1="125" x2="620" y2="125" stroke="rgba(255,255,255,0.04)" />
+                                <line x1="50" y1="175" x2="620" y2="175" stroke="rgba(255,255,255,0.04)" />
+                                <line x1="50" y1="225" x2="620" y2="225" stroke="rgba(255,255,255,0.04)" />
+                                <path d="@trendArea" fill="url(#trendFill)" />
+                                <polyline points="@trendPoints" fill="none" stroke="#8b5cf6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                                <g fill="#0a0a0a" stroke="#8b5cf6" stroke-width="2">
+                                    @for (int i = 0; i < Model.DinlemeTrend.Count; i++)
+                                    {
+                                        var trend = Model.DinlemeTrend[i];
+                                        var xPos = Model.DinlemeTrend.Count == 1 ? 335 : 50 + (570 * i / (Model.DinlemeTrend.Count - 1));
+                                        var yPos = 250 - (225 * trend.Dinlenme / trendMax);
+                                        var tipX = xPos > 490 ? xPos - 138 : xPos + 8;
+                                        var tipY = yPos < 86 ? yPos + 12 : yPos - 64;
+                                        <g class="datum datum-@i"><circle cx="@xPos" cy="@yPos" r="6"></circle><g class="svg-tip" transform="translate(@tipX @tipY)"><rect class="tip-box" width="128" height="62" rx="6" /><text class="tip-title" x="10" y="18">@trend.Tarih.ToString("dd MMM")</text><text class="tip-label" x="10" y="38">Dinleme</text><text class="tip-value" x="118" y="38">@trend.Dinlenme.ToString("N0")</text><text class="tip-label" x="10" y="54">Oran</text><text class="tip-value" x="118" y="54">@trend.Oran.ToString("N1")%</text></g></g>
+                                    }
+                                </g>
+                                <g fill="#71717a" font-size="11" font-family="Sora, sans-serif" text-anchor="middle">
+                                    @for (int i = 0; i < Model.DinlemeTrend.Count; i++)
+                                    {
+                                        var trend = Model.DinlemeTrend[i];
+                                        var xPos = Model.DinlemeTrend.Count == 1 ? 335 : 50 + (570 * i / (Model.DinlemeTrend.Count - 1));
+                                        @:<text x="@xPos" y="272">@trend.Tarih.ToString("dd MMM")</text>
+                                    }
+                                </g>
+                                <g fill="#71717a" font-size="11" font-family="Sora, sans-serif" text-anchor="end">
+                                    <text x="42" y="29">@trendMax.ToString("N0")</text><text x="42" y="79">@((trendMax * 3 / 4).ToString("N0"))</text><text x="42" y="129">@((trendMax / 2).ToString("N0"))</text><text x="42" y="179">@((trendMax / 4).ToString("N0"))</text><text x="42" y="229">0</text>
+                                </g>
+                                <g class="svg-tooltips">
+                                    @for (int i = 0; i < Model.DinlemeTrend.Count; i++)
+                                    {
+                                        var trend = Model.DinlemeTrend[i];
+                                        var xPos = Model.DinlemeTrend.Count == 1 ? 335 : 50 + (570 * i / (Model.DinlemeTrend.Count - 1));
+                                        var yPos = 250 - (225 * trend.Dinlenme / trendMax);
+                                        var tipX = xPos > 490 ? xPos - 138 : xPos + 8;
+                                        var tipY = yPos < 86 ? yPos + 12 : yPos - 64;
+                                        <g class="svg-tip tip-@i" transform="translate(@tipX @tipY)"><rect class="tip-box" width="128" height="62" rx="6" /><text class="tip-title" x="10" y="18">@trend.Tarih.ToString("dd MMM")</text><text class="tip-label" x="10" y="38">Dinleme</text><text class="tip-value" x="118" y="38">@trend.Dinlenme.ToString("N0")</text><text class="tip-label" x="10" y="54">Oran</text><text class="tip-value" x="118" y="54">@trend.Oran.ToString("N1")%</text></g>
+                                    }
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="chart-card animate-in animate-delay-1">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Türlere Göre Dağılım</h3>
+                        </div>
+                        <div class="chart-container small">
+                            <svg class="static-chart" viewBox="0 0 420 220" role="img" aria-label="Türlere Göre Dağılım">
+                                @{
+                                    decimal turOffset = 0;
+                                    var turCevre = 452m;
+                                    var turToplam = Model.TurDagilim.Sum(x => x.TurDinlenme);
+                                    var turListe = Model.TurDagilim.Take(7).ToList();
+                                }
+                                @for (int i = 0; i < turListe.Count; i++)
+                                {
+                                    var tur = turListe[i];
+                                    var oran = turToplam == 0 ? 0 : (tur.TurDinlenme * 100m) / turToplam;
+                                    var dash = turCevre * oran / 100m;
+                                    var startAngle = -90d + (double)(turOffset / turCevre * 360m);
+                                    var endAngle = startAngle + (double)(dash / turCevre * 360m);
+                                    var largeArc = endAngle - startAngle > 180 ? 1 : 0;
+                                    var startX = 210 + (72 * Math.Cos(Math.PI * startAngle / 180));
+                                    var startY = 110 + (72 * Math.Sin(Math.PI * startAngle / 180));
+                                    var endX = 210 + (72 * Math.Cos(Math.PI * endAngle / 180));
+                                    var endY = 110 + (72 * Math.Sin(Math.PI * endAngle / 180));
+                                    var arcPath = "M " + startX.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " " + startY.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " A 72 72 0 " + largeArc + " 1 " + endX.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " " + endY.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+                                    var sectorPath = "M 210 110 L " + startX.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " " + startY.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " A 72 72 0 " + largeArc + " 1 " + endX.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " " + endY.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " Z";
+                                    turOffset += dash;
+                                    var tipX = i % 2 == 0 ? 270 : 24;
+                                    var tipY = i < 3 ? 24 + (i * 46) : 136;
+                                    <g class="datum datum-@i"><path class="arc-hit" d="@sectorPath"></path><path d="@arcPath" fill="none" stroke="@(renkler[i % renkler.Length])" stroke-width="34"></path><g class="svg-tip" transform="translate(@tipX @tipY)"><rect class="tip-box" width="128" height="62" rx="6" /><text class="tip-title" x="10" y="18">@tur.TurAdi</text><text class="tip-label" x="10" y="38">Dinleme</text><text class="tip-value" x="118" y="38">@tur.TurDinlenme.ToString("N0")</text><text class="tip-label" x="10" y="54">Oran</text><text class="tip-value" x="118" y="54">@tur.TurDinlenmeOrani.ToString("N1")%</text></g></g>
+                                }
+                                <text x="210" y="106" fill="#fafafa" font-size="18" font-weight="700" font-family="Bricolage Grotesque, sans-serif" text-anchor="middle">Türler</text>
+                                <text x="210" y="126" fill="#71717a" font-size="12" font-family="Sora, sans-serif" text-anchor="middle">@Model.ToplamDinleme.ToString("N0")</text>
+                                <g class="svg-tooltips">
+                                    @for (int i = 0; i < turListe.Count; i++)
+                                    {
+                                        var tur = turListe[i];
+                                        var tipX = i % 2 == 0 ? 270 : 24;
+                                        var tipY = i < 3 ? 24 + (i * 46) : 136;
+                                        <g class="svg-tip tip-@i" transform="translate(@tipX @tipY)"><rect class="tip-box" width="128" height="62" rx="6" /><text class="tip-title" x="10" y="18">@tur.TurAdi</text><text class="tip-label" x="10" y="38">Dinleme</text><text class="tip-value" x="118" y="38">@tur.TurDinlenme.ToString("N0")</text><text class="tip-label" x="10" y="54">Oran</text><text class="tip-value" x="118" y="54">@tur.TurDinlenmeOrani.ToString("N1")%</text></g>
+                                    }
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="chart-card animate-in">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Yaş Gruplarına Göre Dinleme</h3>
+                        </div>
+                        <div class="chart-container">
+                            <svg class="static-chart chart-fill" viewBox="0 0 640 280" preserveAspectRatio="none" role="img" aria-label="Yaş Gruplarına Göre Dinleme">
+                                <line x1="50" y1="25" x2="620" y2="25" stroke="rgba(255,255,255,0.04)" />
+                                <line x1="50" y1="75" x2="620" y2="75" stroke="rgba(255,255,255,0.04)" />
+                                <line x1="50" y1="125" x2="620" y2="125" stroke="rgba(255,255,255,0.04)" />
+                                <line x1="50" y1="175" x2="620" y2="175" stroke="rgba(255,255,255,0.04)" />
+                                <line x1="50" y1="225" x2="620" y2="225" stroke="rgba(255,255,255,0.04)" />
+                                <g fill="#06b6d4">
+                                    @for (int i = 0; i < Model.YasDagilim.Count; i++)
+                                    {
+                                        var yas = Model.YasDagilim[i];
+                                        var xPos = 82 + (92 * i);
+                                        var height = yasMax == 0 ? 0 : 225 * yas.Dinlenme / yasMax;
+                                        var yPos = 250 - height;
+                                        var label = yas.BitisYas == 100 ? "55+" : yas.BaslangicYas + "-" + yas.BitisYas;
+                                        var tipX = xPos > 430 ? xPos - 128 : xPos + 34;
+                                        var tipY = yPos < 90 ? yPos + 20 : yPos - 66;
+                                        <g class="datum datum-@i"><rect x="@xPos" y="@yPos" width="55" height="@height" rx="4"></rect><g class="svg-tip" transform="translate(@tipX @tipY)"><rect class="tip-box" width="128" height="62" rx="6" /><text class="tip-title" x="10" y="18">@label</text><text class="tip-label" x="10" y="38">Dinleme</text><text class="tip-value" x="118" y="38">@yas.Dinlenme.ToString("N0")</text><text class="tip-label" x="10" y="54">Oran</text><text class="tip-value" x="118" y="54">@yas.Oran.ToString("N1")%</text></g></g>
+                                    }
+                                </g>
+                                <g fill="#71717a" font-size="11" font-family="Sora, sans-serif" text-anchor="middle">
+                                    @for (int i = 0; i < Model.YasDagilim.Count; i++)
+                                    {
+                                        var yas = Model.YasDagilim[i];
+                                        var xPos = 110 + (92 * i);
+                                        var label = yas.BitisYas == 100 ? "55+" : yas.BaslangicYas + "-" + yas.BitisYas;
+                                        @:<text x="@xPos" y="272">@label</text>
+                                    }
+                                </g>
+                                <g fill="#71717a" font-size="11" font-family="Sora, sans-serif" text-anchor="end">
+                                    <text x="42" y="29">@yasMax.ToString("N0")</text><text x="42" y="79">@((yasMax * 3 / 4).ToString("N0"))</text><text x="42" y="129">@((yasMax / 2).ToString("N0"))</text><text x="42" y="179">@((yasMax / 4).ToString("N0"))</text><text x="42" y="229">0</text>
+                                </g>
+                                <g class="svg-tooltips">
+                                    @for (int i = 0; i < Model.YasDagilim.Count; i++)
+                                    {
+                                        var yas = Model.YasDagilim[i];
+                                        var xPos = 82 + (92 * i);
+                                        var height = yasMax == 0 ? 0 : 225 * yas.Dinlenme / yasMax;
+                                        var yPos = 250 - height;
+                                        var label = yas.BitisYas == 100 ? "55+" : yas.BaslangicYas + "-" + yas.BitisYas;
+                                        var tipX = xPos > 430 ? xPos - 128 : xPos + 34;
+                                        var tipY = yPos < 90 ? yPos + 20 : yPos - 66;
+                                        <g class="svg-tip tip-@i" transform="translate(@tipX @tipY)"><rect class="tip-box" width="128" height="62" rx="6" /><text class="tip-title" x="10" y="18">@label</text><text class="tip-label" x="10" y="38">Dinleme</text><text class="tip-value" x="118" y="38">@yas.Dinlenme.ToString("N0")</text><text class="tip-label" x="10" y="54">Oran</text><text class="tip-value" x="118" y="54">@yas.Oran.ToString("N1")%</text></g>
+                                    }
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="chart-card animate-in animate-delay-1">
+                        <div class="chart-header">
+                            <h3 class="chart-title">İllere Göre Dinleme</h3>
+                        </div>
+                        <div class="chart-container">
+                            <svg class="static-chart chart-fill" viewBox="0 0 640 280" preserveAspectRatio="none" role="img" aria-label="İllere Göre Dinleme">
+                                <g font-family="Sora, sans-serif" font-size="12">
+                                    @for (int i = 0; i < Model.İlDagilim.Take(8).Count(); i++)
+                                    {
+                                        var il = Model.İlDagilim[i];
+                                        var y = 12 + (33 * i);
+                                        var textY = 29 + (33 * i);
+                                        var width = ilMax == 0 ? 0 : 500 * il.Dinlenme / ilMax;
+                                        var tipX = width > 360 ? 420 : 190 + width / 2;
+                                        var tipY = y > 176 ? y - 66 : y + 28;
+                                        @:<text x="88" y="@textY" fill="#a1a1aa" text-anchor="end">@il.İlAdi</text><g class="datum datum-@i"><rect x="100" y="@y" width="@width" height="20" rx="4" fill="#f59e0b" opacity="0.34"></rect><g class="svg-tip" transform="translate(@tipX @tipY)"><rect class="tip-box" width="128" height="62" rx="6" /><text class="tip-title" x="10" y="18">@il.İlAdi</text><text class="tip-label" x="10" y="38">Dinleme</text><text class="tip-value" x="118" y="38">@il.Dinlenme.ToString("N0")</text><text class="tip-label" x="10" y="54">Oran</text><text class="tip-value" x="118" y="54">@il.Oran.ToString("N1")%</text></g></g><text x="@(108 + width)" y="@(textY - 1)" fill="#fafafa" font-size="11">@il.Dinlenme.ToString("N0")</text>
+                                    }
+                                </g>
+                                <g class="svg-tooltips">
+                                    @for (int i = 0; i < Model.İlDagilim.Take(8).Count(); i++)
+                                    {
+                                        var il = Model.İlDagilim[i];
+                                        var y = 12 + (33 * i);
+                                        var width = ilMax == 0 ? 0 : 500 * il.Dinlenme / ilMax;
+                                        var tipX = width > 360 ? 420 : 190 + width / 2;
+                                        var tipY = y > 176 ? y - 66 : y + 28;
+                                        <g class="svg-tip tip-@i" transform="translate(@tipX @tipY)"><rect class="tip-box" width="128" height="62" rx="6" /><text class="tip-title" x="10" y="18">@il.İlAdi</text><text class="tip-label" x="10" y="38">Dinleme</text><text class="tip-value" x="118" y="38">@il.Dinlenme.ToString("N0")</text><text class="tip-label" x="10" y="54">Oran</text><text class="tip-value" x="118" y="54">@il.Oran.ToString("N1")%</text></g>
+                                    }
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="chart-card animate-in">
+                        <div class="chart-header">
+                            <h3 class="chart-title">İlçelere Göre Dinleme</h3>
+                        </div>
+                        <div class="chart-container">
+                            <svg class="static-chart chart-fill" viewBox="0 0 640 280" preserveAspectRatio="none" role="img" aria-label="İlçelere Göre Dinleme">
+                                <g font-family="Sora, sans-serif" font-size="12">
+                                    @for (int i = 0; i < Model.İlceDagilim.Take(8).Count(); i++)
+                                    {
+                                        var ilce = Model.İlceDagilim[i];
+                                        var y = 12 + (33 * i);
+                                        var textY = 29 + (33 * i);
+                                        var width = ilceMax == 0 ? 0 : 500 * ilce.Dinlenme / ilceMax;
+                                        var tipX = width > 360 ? 420 : 190 + width / 2;
+                                        var tipY = y > 176 ? y - 66 : y + 28;
+                                        @:<text x="88" y="@textY" fill="#a1a1aa" text-anchor="end">@ilce.İlceAdi</text><g class="datum datum-@i"><rect x="100" y="@y" width="@width" height="20" rx="4" fill="#10b981" opacity="0.34"></rect><g class="svg-tip" transform="translate(@tipX @tipY)"><rect class="tip-box" width="128" height="62" rx="6" /><text class="tip-title" x="10" y="18">@ilce.İlceAdi</text><text class="tip-label" x="10" y="38">Dinleme</text><text class="tip-value" x="118" y="38">@ilce.Dinlenme.ToString("N0")</text><text class="tip-label" x="10" y="54">Oran</text><text class="tip-value" x="118" y="54">@ilce.Oran.ToString("N1")%</text></g></g><text x="@(108 + width)" y="@(textY - 1)" fill="#fafafa" font-size="11">@ilce.Dinlenme.ToString("N0")</text>
+                                    }
+                                </g>
+                                <g class="svg-tooltips">
+                                    @for (int i = 0; i < Model.İlceDagilim.Take(8).Count(); i++)
+                                    {
+                                        var ilce = Model.İlceDagilim[i];
+                                        var y = 12 + (33 * i);
+                                        var width = ilceMax == 0 ? 0 : 500 * ilce.Dinlenme / ilceMax;
+                                        var tipX = width > 360 ? 420 : 190 + width / 2;
+                                        var tipY = y > 176 ? y - 66 : y + 28;
+                                        <g class="svg-tip tip-@i" transform="translate(@tipX @tipY)"><rect class="tip-box" width="128" height="62" rx="6" /><text class="tip-title" x="10" y="18">@ilce.İlceAdi</text><text class="tip-label" x="10" y="38">Dinleme</text><text class="tip-value" x="118" y="38">@ilce.Dinlenme.ToString("N0")</text><text class="tip-label" x="10" y="54">Oran</text><text class="tip-value" x="118" y="54">@ilce.Oran.ToString("N1")%</text></g>
+                                    }
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="chart-card animate-in animate-delay-1">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Haftanın Günlerine Göre</h3>
+                        </div>
+                        <div class="chart-container">
+                            <svg class="static-chart chart-fill" viewBox="0 0 640 280" preserveAspectRatio="none" role="img" aria-label="Haftanın Günlerine Göre Dinleme">
+                                <line x1="50" y1="25" x2="620" y2="25" stroke="rgba(255,255,255,0.04)" />
+                                <line x1="50" y1="75" x2="620" y2="75" stroke="rgba(255,255,255,0.04)" />
+                                <line x1="50" y1="125" x2="620" y2="125" stroke="rgba(255,255,255,0.04)" />
+                                <line x1="50" y1="175" x2="620" y2="175" stroke="rgba(255,255,255,0.04)" />
+                                <line x1="50" y1="225" x2="620" y2="225" stroke="rgba(255,255,255,0.04)" />
+                                <g fill="#8b5cf6">
+                                    @for (int i = 0; i < Model.GunDagilim.Count; i++)
+                                    {
+                                        var gun = Model.GunDagilim[i];
+                                        var xPos = 78 + (77 * i);
+                                        var height = gunMax == 0 ? 0 : 225 * gun.Dinlenme / gunMax;
+                                        var yPos = 250 - height;
+                                        var tipX = xPos > 430 ? xPos - 128 : xPos + 38;
+                                        var tipY = yPos < 90 ? yPos + 20 : yPos - 66;
+                                        <g class="datum datum-@i"><rect x="@xPos" y="@yPos" width="48" height="@height" rx="4"></rect><g class="svg-tip" transform="translate(@tipX @tipY)"><rect class="tip-box" width="128" height="62" rx="6" /><text class="tip-title" x="10" y="18">@gun.GunAdi</text><text class="tip-label" x="10" y="38">Dinleme</text><text class="tip-value" x="118" y="38">@gun.Dinlenme.ToString("N0")</text><text class="tip-label" x="10" y="54">Oran</text><text class="tip-value" x="118" y="54">@gun.Oran.ToString("N1")%</text></g></g>
+                                    }
+                                </g>
+                                <g fill="#71717a" font-size="11" font-family="Sora, sans-serif" text-anchor="middle">
+                                    @for (int i = 0; i < Model.GunDagilim.Count; i++)
+                                    {
+                                        var gun = Model.GunDagilim[i];
+                                        var xPos = 102 + (77 * i);
+                                        @:<text x="@xPos" y="272">@gun.GunAdi.Substring(0, Math.Min(3, gun.GunAdi.Length))</text>
+                                    }
+                                </g>
+                                <g fill="#71717a" font-size="11" font-family="Sora, sans-serif" text-anchor="end">
+                                    <text x="42" y="29">@gunMax.ToString("N0")</text><text x="42" y="79">@((gunMax * 3 / 4).ToString("N0"))</text><text x="42" y="129">@((gunMax / 2).ToString("N0"))</text><text x="42" y="179">@((gunMax / 4).ToString("N0"))</text><text x="42" y="229">0</text>
+                                </g>
+                                <g class="svg-tooltips">
+                                    @for (int i = 0; i < Model.GunDagilim.Count; i++)
+                                    {
+                                        var gun = Model.GunDagilim[i];
+                                        var xPos = 78 + (77 * i);
+                                        var height = gunMax == 0 ? 0 : 225 * gun.Dinlenme / gunMax;
+                                        var yPos = 250 - height;
+                                        var tipX = xPos > 430 ? xPos - 128 : xPos + 38;
+                                        var tipY = yPos < 90 ? yPos + 20 : yPos - 66;
+                                        <g class="svg-tip tip-@i" transform="translate(@tipX @tipY)"><rect class="tip-box" width="128" height="62" rx="6" /><text class="tip-title" x="10" y="18">@gun.GunAdi</text><text class="tip-label" x="10" y="38">Dinleme</text><text class="tip-value" x="118" y="38">@gun.Dinlenme.ToString("N0")</text><text class="tip-label" x="10" y="54">Oran</text><text class="tip-value" x="118" y="54">@gun.Oran.ToString("N1")%</text></g>
+                                    }
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="chart-card animate-in">
+                        <div class="chart-header">
+                            <h3 class="chart-title">En Çok Dinlenen 10 Sanatçı</h3>
+                        </div>
+                        <ul class="data-list" id="topSanatciList">
+                            @for (int i = 0; i < Model.EnCokDinlenenSanatcilar.Count; i++)
+                            {
+                                var sanatci = Model.EnCokDinlenenSanatcilar[i];
+                                <li class="data-list-item"><div class="item-info"><span class="item-rank @(i < 3 ? "top" : "")">@(i + 1)</span><div><div class="item-name">@sanatci.SanatciAdi</div><div class="item-meta">@sanatci.Dinlenme.ToString("N0") dinleme</div></div></div><span class="item-value">@sanatci.Oran.ToString("N1")%</span></li>
+                            }
+                        </ul>
+                    </div>
+
+                    <div class="chart-card animate-in animate-delay-1">
+                        <div class="chart-header">
+                            <h3 class="chart-title">En Çok Dinlenen 10 Şarkı</h3>
+                        </div>
+                        <ul class="data-list" id="topSarkiList">
+                            @for (int i = 0; i < Model.EnCokDinlenenSarkilar.Count; i++)
+                            {
+                                var sarki = Model.EnCokDinlenenSarkilar[i];
+                                <li class="data-list-item"><div class="item-info"><span class="item-rank @(i < 3 ? "top" : "")">@(i + 1)</span><div><div class="item-name">@sarki.SarkiAdi</div><div class="item-meta">@sarki.SanatciAdi</div></div></div><span class="item-value">@sarki.Dinlenme.ToString("N0")</span></li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="chart-card animate-in">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Top Şehirler</h3>
+                        </div>
+                        <ul class="progress-list" id="topSehirler">
+                            @for (int i = 0; i < Model.TopSehirler.Count; i++)
+                            {
+                                var sehir = Model.TopSehirler[i];
+                                <li class="progress-item"><div class="progress-header"><span class="progress-label">@sehir.SehirAdi</span><span class="progress-percent">@sehir.Oran%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: @(sehir.Oran)%; background: @(renkler[i % renkler.Length])"></div></div></li>
+                            }
+                        </ul>
+                    </div>
+
+                    <div class="chart-card animate-in animate-delay-1">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Top Türler</h3>
+                        </div>
+                        <ul class="progress-list" id="topTurler">
+                            @for (int i = 0; i < Model.TopTurlar.Count; i++)
+                            {
+                                var tur = Model.TopTurlar[i];
+                                <li class="progress-item"><div class="progress-header"><span class="progress-label">@tur.TurAdi</span><span class="progress-percent">@tur.Oran%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: @(tur.Oran)%; background: @(renkler[i % renkler.Length])"></div></div></li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mini-cards-row">
+                    <div class="mini-card animate-in">
+                        <div class="mini-card-icon" style="background: rgba(139,92,246,0.12); color: #8b5cf6;">🔥</div>
+                        <div class="mini-card-content">
+                            <div class="mini-card-value">Trending</div>
+                            <div class="mini-card-label">@Model.Trending türü şu anda trend</div>
+                        </div>
+                    </div>
+                    <div class="mini-card animate-in animate-delay-1">
+                        <div class="mini-card-icon" style="background: rgba(6,182,212,0.12); color: #06b6d4;">📍</div>
+                        <div class="mini-card-content">
+                            <div class="mini-card-value">@Model.EnAktifBolge</div>
+                            <div class="mini-card-label">En aktif bölge</div>
+                        </div>
+                    </div>
+                    <div class="mini-card animate-in animate-delay-2">
+                        <div class="mini-card-icon" style="background: rgba(245,158,11,0.12); color: #f59e0b;">⏱</div>
+                        <div class="mini-card-content">
+                            <div class="mini-card-value">@Model.EnYogunGun</div>
+                            <div class="mini-card-label">En yoğun gün</div>
+                        </div>
+                    </div>
+                    <div class="mini-card animate-in animate-delay-3">
+                        <div class="mini-card-icon" style="background: rgba(16,185,129,0.12); color: #10b981;">🎯</div>
+                        <div class="mini-card-content">
+                            <div class="mini-card-value">@Model.AktifYas.BaslangicYas-@Model.AktifYas.BitisYas</div>
+                            <div class="mini-card-label">En aktif yaş grubu</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+</body>
+</html>
